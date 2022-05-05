@@ -64,6 +64,7 @@ var (
 	parseJson              = "parse_json"
 	parseYAML              = "parse_yaml"
 	items                  = "items"
+	objectFromLists        = "object_from_lists"
 )
 
 const errorPrefix = "JMESPath function '%s': "
@@ -381,6 +382,17 @@ func GetFunctions() []*FunctionEntry {
 			},
 			ReturnType: []JpType{JpArray},
 			Note:       "converts a map to an array of objects where each key:value is an item in the array",
+		},
+		{
+			Entry: &gojmespath.FunctionEntry{Name: objectFromLists,
+				Arguments: []ArgSpec{
+					{Types: []JpType{JpArray}},
+					{Types: []JpType{JpArray}},
+				},
+				Handler: jpObjectFromLists,
+			},
+			ReturnType: []JpType{JpObject},
+			Note:       "converts two arrays, of keys and values respectively, to a map of keys:values",
 		},
 	}
 
@@ -842,6 +854,27 @@ func jpItems(arguments []interface{}) (interface{}, error) {
 	}
 
 	return arrayOfObj, nil
+}
+
+func jpObjectFromLists(arguments []interface{}) (interface{}, error) {
+	fmt.Printf("reflect.TypeOf(arguments[0]): %v\n", reflect.TypeOf(arguments[0]))
+	keys, ok := arguments[0].([]string)
+	fmt.Printf("arguments[0]: %v\n", arguments[0])
+	if !ok {
+		return nil, fmt.Errorf(invalidArgumentTypeError, arguments, 0, "Array")
+	}
+	values, ok := arguments[1].([]interface{})
+	if !ok {
+		return nil, fmt.Errorf(invalidArgumentTypeError, arguments, 1, "Array")
+	}
+
+	object := make(map[string]interface{})
+
+	for idx := range keys {
+		object[string(keys[idx])] = values[idx]
+	}
+
+	return object, nil
 }
 
 // InterfaceToString casts an interface to a string type

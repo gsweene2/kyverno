@@ -1334,3 +1334,43 @@ func Test_Items(t *testing.T) {
 	}
 
 }
+
+func Test_ObjectFromLists(t *testing.T) {
+
+	testCases := []struct {
+		test           string
+		keys           string
+		values         string
+		expectedResult string
+	}{
+		{
+			test:           `object_from_lists(["key1","key2"],["val1","val2"])`,
+			keys:           "[\"key1\",\"key2\"]",
+			values:         `["val1","val2"]`,
+			expectedResult: `{ "key1": 1, "key2": "value1" }]`,
+		},
+	}
+
+	for i, tc := range testCases {
+		t.Run(fmt.Sprintf("case %d", i), func(t *testing.T) {
+			fmt.Printf("tc.keys: %v\n", tc.keys)
+			query, err := New("object_from_lists(" + tc.values + "," + tc.values + ")")
+			assert.NilError(t, err)
+
+			res, err := query.Search("")
+			// Failing
+			// function '[[<nil> <nil>] [<nil> <nil>]]': 0 argument is expected of Array type
+			assert.NilError(t, err)
+
+			result, ok := res.(map[string]interface{})
+			assert.Assert(t, ok)
+
+			var expected map[string]interface{}
+			err = json.Unmarshal([]byte(tc.expectedResult), &expected)
+			assert.NilError(t, err)
+
+			assert.DeepEqual(t, result, expected)
+		})
+	}
+
+}
